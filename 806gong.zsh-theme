@@ -14,6 +14,39 @@ git_initials() {
 	git config --get user.initials
 }
 
+is-git-dir() {
+	if __git_prompt_git rev-parse --git-dir &> /dev/null
+	then
+		git_dirty_flag
+	else
+		echo ""
+	fi
+}
+
+git_dirty_flag () {
+	local STATUS
+	local -a FLAGS
+	FLAGS=('--porcelain')
+	if [[ "$(__git_prompt_git config --get oh-my-zsh.hide-dirty)" != "1" ]]
+	then
+		if [[ "${DISABLE_UNTRACKED_FILES_DIRTY:-}" == "true" ]]
+		then
+			FLAGS+='--untracked-files=no'
+		fi
+		case "${GIT_STATUS_IGNORE_SUBMODULES:-}" in
+			(git)  ;;
+			(*) FLAGS+="--ignore-submodules=${GIT_STATUS_IGNORE_SUBMODULES:-dirty}"  ;;
+		esac
+		STATUS=$(__git_prompt_git status ${FLAGS} 2> /dev/null | tail -1)
+	fi
+	if [[ -n $STATUS ]]
+	then
+		echo "%{$fg[red]✗ "
+	else
+		echo "%{$fg[green]✓ "
+	fi
+}
+
 # PROMPT="%(?:%{$fg_bold[green]%}➜ :%{$fg_bold[red]%}➜ )"
 # PROMPT+=' %{$fg[cyan]%}%c%{$reset_color%} $(git_prompt_info)'
 
